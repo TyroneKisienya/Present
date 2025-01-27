@@ -1,9 +1,20 @@
 <template>
   <div id="app">
-    <VerificationForm v-if="!isVerified" @verification-success="handleVerification" />
-    <BalloonPopping v-else-if="isVerified && !balloonsPoppedComplete" @balloons-complete="handleBalloonCompletion" />
-    <CakeDecorator v-else-if="balloonsPoppedComplete" />
-    <!--we'll be adding more componentsas we build -->
+    <VerificationForm 
+      v-if="!isVerified" 
+      @verification-success="handleVerification" 
+    />
+    <BalloonPopping 
+      v-else-if="isVerified && !balloonsPoppedComplete" 
+      @balloons-complete="handleBalloonCompletion" 
+    />
+    <CakeDecorator 
+      v-else-if="balloonsPoppedComplete && !candleBlown" 
+      @candle-blown="handleCandleBlown" 
+    />
+    <InspirationMessage 
+      v-else-if="candleBlown" 
+    />
   </div>
 </template>
 
@@ -12,9 +23,11 @@ import { ref } from 'vue'
 import VerificationForm from './components/VerificationForm.vue'
 import BalloonPopping from './components/BalloonPopping.vue'
 import CakeDecorator from './components/CakeDecorator.vue'
+import InspirationMessage from './components/InspirationMessage.vue'
 
 const isVerified = ref(false)
 const balloonsPoppedComplete = ref(false)
+const candleBlown = ref(false)
 
 const handleVerification = () => {
   isVerified.value = true
@@ -22,6 +35,10 @@ const handleVerification = () => {
 
 const handleBalloonCompletion = () => {
   balloonsPoppedComplete.value = true
+}
+
+const handleCandleBlown = () => {
+  candleBlown.value = true
 }
 </script>
 
