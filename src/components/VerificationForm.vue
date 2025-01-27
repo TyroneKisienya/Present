@@ -1,47 +1,63 @@
 // VerificationForm.vue
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const name = ref('')
+// eslint-disable-next-line no-undef
+const emit = defineEmits(['verification-success'])
+
+const verificationSteps = ref([
+  "Are you Fatma!",
+  "Prove it...",
+  "How old are you today?"
+])
+const currentStep = ref(0)
 const age = ref('')
 const showError = ref(false)
 const isVerified = ref(false)
 
+const revealNextStep = () => {
+  if (currentStep.value < verificationSteps.value.length - 1) {
+    currentStep.value++
+  }
+}
+
 const verifyIdentity = () => {
-  if (name.value.toLowerCase() === 'fatma' && parseInt(age.value) === 23) {
+  if (parseInt(age.value) === 23) {
     isVerified.value = true
     showError.value = false
+    emit('verification-success')
   } else {
     showError.value = true
-    // Reset fields
-    name.value = ''
     age.value = ''
   }
 }
+
+onMounted(() => {
+  const stepReveal = setInterval(() => {
+    revealNextStep()
+    if (currentStep.value === verificationSteps.value.length - 1) {
+      clearInterval(stepReveal)
+    }
+  }, 1500)
+})
 </script>
 
 <template>
   <div class="verification-container">
     <div v-if="!isVerified" class="form-container">
-      <h1 class="title">Birthday Verification</h1>
-      
-      <form @submit.prevent="verifyIdentity" class="form">
-        <div class="input-group">
-          <label for="name">What's your name?</label>
-          <input 
-            id="name"
-            v-model="name"
-            type="text"
-            required
-            placeholder="Enter your name"
-            class="input"
-          >
-        </div>
+      <div class="verification-steps">
+        <h2 v-for="(step, index) in verificationSteps.slice(0, currentStep + 1)" 
+            :key="index" 
+            class="step">
+          {{ step }}
+        </h2>
+      </div>
 
+      <form v-if="currentStep === verificationSteps.length - 1" 
+            @submit.prevent="verifyIdentity" 
+            class="form">
         <div class="input-group">
-          <label for="age">How old are you turning this year?</label>
           <input 
-            id="age"
             v-model="age"
             type="number"
             required
@@ -62,7 +78,6 @@ const verifyIdentity = () => {
 
     <div v-else class="success-message">
       <h2>Verification Successful!</h2>
-      <!-- We'll add navigation to next component here later -->
     </div>
   </div>
 </template>
@@ -72,31 +87,29 @@ const verifyIdentity = () => {
   max-width: 500px;
   margin: 50px auto;
   padding: 20px;
+  text-align: center;
 }
 
-.title {
-  text-align: center;
-  color: #333;
+.verification-steps {
   margin-bottom: 30px;
 }
 
-.form-container {
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.step {
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+  margin: 15px 0;
+  color: #333;
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
 }
 
 .form {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 20px;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .input {
@@ -104,12 +117,13 @@ const verifyIdentity = () => {
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 16px;
+  width: 200px;
 }
 
 .submit-btn {
   background: #ff69b4;
   color: white;
-  padding: 12px;
+  padding: 12px 24px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -117,21 +131,8 @@ const verifyIdentity = () => {
   transition: background 0.3s;
 }
 
-.submit-btn:hover {
-  background: #ff1493;
-}
-
 .error-message {
-  margin-top: 20px;
-  padding: 10px;
-  text-align: center;
   color: #ff4444;
-  background: #ffe6e6;
-  border-radius: 5px;
-}
-
-.success-message {
-  text-align: center;
-  color: #4caf50;
+  margin-top: 20px;
 }
 </style>
