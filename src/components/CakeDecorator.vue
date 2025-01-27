@@ -2,6 +2,9 @@
 import { ref, onUnmounted } from 'vue';
 
 // eslint-disable-next-line no-undef
+const emit = defineEmits(['candle-blown']);
+
+// eslint-disable-next-line no-undef
 const props = defineProps({
   initialCakes: {
     type: Array,
@@ -26,6 +29,11 @@ const startFlickering = () => {
   candle.value.isFlickering = true;
   intervalId = setInterval(() => {
     candle.value.flame = Math.max(0, candle.value.flame - Math.floor(Math.random() * 10));
+    // Check if flame has gone out during flickering
+    if (candle.value.flame === 0) {
+      stopFlickering();
+      emit('candle-blown');
+    }
   }, 100);
 };
 
@@ -44,6 +52,7 @@ const blowCandle = () => {
   } else if (candle.value.blowCount >= 3) {
     candle.value.flame = 0;
     stopFlickering();
+    emit('candle-blown');  // Emit event when candle is blown out
   }
 };
 
@@ -68,37 +77,38 @@ onUnmounted(() => {
     </button>
     
     <div class="cake-scene">
-      <div 
-        class="candle" 
-        :class="{ 'flickering': candle.isFlickering }"
-        :style="{ height: `${candle.flame}px` }"
-        @click="blowCandle"
-      >
-        <div class="flame" v-if="candle.flame > 0">
-          <div class="flame-inner"></div>
-        </div>
-        <div class="candle-base"></div>
-      </div>
-
-      <div class="cake-layers">
-        <div
-          v-for="(cake, index) in cakes"
-          :key="index"
-          class="cake-layer"
-          :style="{
-            height: `${cake.size * 100}px`,
-            width: `${cake.size * 200}px`,
-            backgroundColor: cake.frostingColor,
-            borderColor: cake.borderColor,
-            order: cakes.length - index
-          }"
+      <div class="cake-and-candle">
+        <div 
+          class="candle" 
+          :class="{ 'flickering': candle.isFlickering }"
+          @click="blowCandle"
         >
-          <div class="frosting-drips"></div>
-          <div class="sprinkles" v-if="index === 0"></div>
-          <div class="layer-shadow"></div>
+          <div class="flame" v-if="candle.flame > 0">
+            <div class="flame-inner"></div>
+          </div>
+          <div class="candle-base"></div>
         </div>
+
+        <div class="cake-layers">
+          <div
+            v-for="(cake, index) in cakes"
+            :key="index"
+            class="cake-layer"
+            :style="{
+              height: `${cake.size * 100}px`,
+              width: `${cake.size * 200}px`,
+              backgroundColor: cake.frostingColor,
+              borderColor: cake.borderColor,
+              order: cakes.length - index
+            }"
+          >
+            <div class="frosting-drips"></div>
+            <div class="sprinkles" v-if="index === 0"></div>
+            <div class="layer-shadow"></div>
+          </div>
+        </div>
+        <div class="plate"></div>
       </div>
-      <div class="plate"></div>
     </div>
   </div>
 </template>
@@ -110,14 +120,6 @@ onUnmounted(() => {
   align-items: center;
   padding: 2rem;
   min-height: 500px;
-}
-
-.cake-scene {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 50px;
 }
 
 .reset-button {
@@ -134,15 +136,33 @@ onUnmounted(() => {
 
 .reset-button:hover {
   background-color: #45a049;
-  transform: translateY(-1px);
+}
+
+.cake-scene {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 400px;
+}
+
+.cake-and-candle {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .candle {
   width: 20px;
-  position: relative;
+  height: 60px;
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 2;
   cursor: pointer;
-  margin-bottom: -10px;
 }
 
 .candle-base {
@@ -175,15 +195,6 @@ onUnmounted(() => {
   background: #fff;
   border-radius: 50% 50% 20% 20%;
   opacity: 0.7;
-}
-
-.flickering .flame {
-  animation: flicker 0.15s infinite alternate;
-}
-
-@keyframes flicker {
-  0% { transform: translateX(-50%) scale(1); opacity: 1; }
-  100% { transform: translateX(-50%) scale(0.9); opacity: 0.8; }
 }
 
 .cake-layers {
@@ -247,18 +258,16 @@ onUnmounted(() => {
   height: 20px;
   background: linear-gradient(to bottom, #f0f0f0, #fff);
   border-radius: 50%;
-  margin-top: -10px;
+  margin-top: 10px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-@keyframes float {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-  100% { transform: translateY(0); }
+@keyframes flicker {
+  0% { transform: translateX(-50%) scale(1); opacity: 1; }
+  100% { transform: translateX(-50%) scale(0.9); opacity: 0.8; }
 }
 
-.cake-layer:hover {
-  transform: scale(1.02);
-  animation: float 2s infinite ease-in-out;
+.flickering .flame {
+  animation: flicker 0.15s infinite alternate;
 }
 </style>
